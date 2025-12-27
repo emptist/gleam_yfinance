@@ -9,16 +9,22 @@ import gleam/string
 
 import yfinance/types.{
   type Instrument, type Interval, type Period, type YFinanceError,
-  type ProxyConfig, type YahooEndpoint, type StockInfo, type Ohlcv
+  type ProxyConfig, type YahooEndpoint, type StockInfo, type Ohlcv,
+  OneMinute, TwoMinutes, FiveMinutes, FifteenMinutes,
+  ThirtyMinutes, SixtyMinutes, NinetyMinutes, OneHour,
+  OneDay, FiveDays, OneWeek, OneMonth, ThreeMonths,
+  PeriodOneDay, PeriodFiveDays, PeriodOneMonth, PeriodThreeMonths,
+  PeriodSixMonths, PeriodOneYear, PeriodTwoYears, PeriodFiveYears,
+  PeriodTenYears, PeriodYearToDate, PeriodMax,
+  Stock, Crypto, Forex, Fund, Index, ETF, Bond,
+  QuoteEndpoint, ChartEndpoint, SummaryEndpoint, HistoricalEndpoint,
+  SearchEndpoint, ProfileEndpoint, StatisticsEndpoint,
+  FinancialDataEndpoint, DefaultKeyStatistics,
+  NetworkError, ApiError, ParseError, ValidationError,
+  RateLimitError, ProxyError, TimeoutError
 }
 
 /// Convert interval to string for API calls
-import yfinance/types.{
-  OneMinute, TwoMinutes, FiveMinutes, FifteenMinutes,
-  ThirtyMinutes, SixtyMinutes, NinetyMinutes, OneHour,
-  OneDay, FiveDays, OneWeek, OneMonth, ThreeMonths
-}
-
 pub fn interval_to_string(interval: Interval) -> String {
   case interval {
     OneMinute -> "1m"
@@ -38,32 +44,23 @@ pub fn interval_to_string(interval: Interval) -> String {
 }
 
 /// Convert period to string for API calls
-import yfinance/types.{
-  PeriodOneDay, PeriodFiveDays, PeriodOneMonth, PeriodThreeMonths,
-  SixMonths, OneYear, TwoYears, FiveYears, TenYears, YearToDate, Max
-}
-
 pub fn period_to_string(period: Period) -> String {
   case period {
     PeriodOneDay -> "1d"
     PeriodFiveDays -> "5d"
     PeriodOneMonth -> "1mo"
     PeriodThreeMonths -> "3mo"
-    SixMonths -> "6mo"
-    OneYear -> "1y"
-    TwoYears -> "2y"
-    FiveYears -> "5y"
-    TenYears -> "10y"
-    YearToDate -> "ytd"
-    Max -> "max"
+    PeriodSixMonths -> "6mo"
+    PeriodOneYear -> "1y"
+    PeriodTwoYears -> "2y"
+    PeriodFiveYears -> "5y"
+    PeriodTenYears -> "10y"
+    PeriodYearToDate -> "ytd"
+    PeriodMax -> "max"
   }
 }
 
 /// Convert instrument to Yahoo Finance symbol format
-import yfinance/types.{
-  Stock, Crypto, Forex, Fund, Index, ETF, Bond
-}
-
 pub fn instrument_to_symbol(instrument: Instrument) -> String {
   case instrument {
     Stock(symbol) -> symbol
@@ -154,11 +151,6 @@ pub fn parse_int_safe(value: String) -> Result(Int, String) {
 }
 
 /// Format error messages
-import yfinance/types.{
-  NetworkError, ApiError, ParseError, ValidationError,
-  RateLimitError, ProxyError, TimeoutError
-}
-
 pub fn format_error(error: YFinanceError) -> String {
   case error {
     NetworkError(msg) -> "Network Error: " <> msg
@@ -201,12 +193,6 @@ pub fn build_yahoo_url(
   let base_url = "https://query1.finance.yahoo.com"
 
   let endpoint_path = case endpoint {
-import yfinance/types.{
-  QuoteEndpoint, ChartEndpoint, SummaryEndpoint, HistoricalEndpoint,
-  SearchEndpoint, ProfileEndpoint, StatisticsEndpoint,
-  FinancialDataEndpoint, DefaultKeyStatistics
-}
-
     QuoteEndpoint -> "/v8/finance/chart"
     ChartEndpoint -> "/v8/finance/chart"
     SummaryEndpoint -> "/v10/finance/quoteSummary"
@@ -246,7 +232,7 @@ pub fn build_request_params(
   ])
   |> case include_adjustments {
     True -> dict.insert(_, "includeAdjustedClose", "true")
-    False -> headers
+    False -> _
   }
 }
 
