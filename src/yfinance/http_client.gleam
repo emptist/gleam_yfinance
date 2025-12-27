@@ -11,6 +11,18 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 
+// Import types and utils
+import yfinance/types.{
+  type HttpRequest, type HttpResponse, type HttpResult, type YFinanceConfig,
+  type YFinanceError, type NetworkError, type ParseError, type RateLimitError,
+  type StockData, type StockInfo, type Interval, type Period, type OneDay,
+  type Ohlcv, type ProxyConfig, type YahooEndpoint, type ChartEndpoint,
+  type SummaryEndpoint, type HttpMethod, type GET
+}
+import yfinance/utils.{
+  build_request_params, build_yahoo_url, create_headers
+}
+
 /// Execute HTTP request with retry logic
 pub fn execute_request(
   request: HttpRequest,

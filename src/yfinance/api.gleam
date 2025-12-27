@@ -1,21 +1,35 @@
 //// Main API module for Yahoo Finance
 //// Provides yfinance-like interface
 
+import gleam/dict.{type Dict}
+import gleam/float
+import gleam/int
 import gleam/io
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
-import gleam/int
-import gleam/float
-import gleam/option.{type Option, None, Some}
-import gleam/dict.{type Dict}
+
+// Import types and utils
+import yfinance/http_client.{
+  fetch_stock_data, fetch_stock_data_batch, fetch_stock_info,
+}
+import yfinance/types.{
+  type Indicator, type Interval, type Ohlcv, type OneDay, type OneYear,
+  type Period, type ProxyConfig, type StockData, type StockInfo,
+  type ValidationError, type YFinanceConfig, type YFinanceError,
+}
+import yfinance/utils.{
+  calculate_ema, calculate_rsi, calculate_sma, chunk_list, format_error,
+  interval_to_string, period_to_string, validate_interval_period,
+}
 
 /// Default configuration
 pub fn default_config() -> YFinanceConfig {
   YFinanceConfig(
     proxy: Error("No proxy configured"),
     user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    timeout: 30000,
+    timeout: 30_000,
     max_retries: 3,
     batch_size: 50,
   )
@@ -26,7 +40,7 @@ pub fn config_with_proxy(proxy: ProxyConfig) -> YFinanceConfig {
   YFinanceConfig(
     proxy: Ok(proxy),
     user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    timeout: 30000,
+    timeout: 30_000,
     max_retries: 3,
     batch_size: 50,
   )
@@ -44,7 +58,12 @@ pub fn proxy(host: String, port: Int) -> ProxyConfig {
 }
 
 /// Create a proxy configuration with authentication
-pub fn proxy_with_auth(host: String, port: Int, username: String, password: String) -> ProxyConfig {
+pub fn proxy_with_auth(
+  host: String,
+  port: Int,
+  username: String,
+  password: String,
+) -> ProxyConfig {
   ProxyConfig(
     host: host,
     port: port,
@@ -67,7 +86,7 @@ pub fn get_stock_data(
     True -> {
       let period_str = period_to_string(period)
       let interval_str = interval_to_string(interval)
-      
+
       case fetch_stock_data(symbol, period_str, interval_str, config) {
         Ok(stock_data) -> Ok(stock_data)
         Error(e) -> Error(e)
@@ -85,7 +104,7 @@ pub fn get_stock_data_batch(
 ) -> YFinanceResult(Dict(String, StockData)) {
   let period_str = period_to_string(period)
   let interval_str = interval_to_string(interval)
-  
+
   // Use batch API if available, otherwise make individual calls
   case fetch_stock_data_batch(symbols, period_str, interval_str, config) {
     Ok(data_dict) -> Ok(data_dict)
@@ -94,7 +113,10 @@ pub fn get_stock_data_batch(
 }
 
 /// Get comprehensive stock information
-pub fn get_stock_info(symbol: String, config: YFinanceConfig) -> YFinanceResult(StockInfo) {
+pub fn get_stock_info(
+  symbol: String,
+  config: YFinanceConfig,
+) -> YFinanceResult(StockInfo) {
   case fetch_stock_info(symbol, config) {
     Ok(stock_info) -> Ok(stock_info)
     Error(e) -> Error(e)
@@ -106,25 +128,24 @@ pub fn get_stock_info_batch(
   symbols: List(String),
   config: YFinanceConfig,
 ) -> YFinanceResult(Dict(String, StockInfo)) {
-  list.fold(
-    symbols,
-    Ok(dict.new()),
-    fn(acc, symbol) {
-      case acc {
-        Ok(info_dict) -> {
-          case fetch_stock_info(symbol, config) {
-            Ok(stock_info) -> Ok(dict.insert(info_dict, symbol, stock_info))
-            Error(e) -> Error(e)
-          }
+  list.fold(symbols, Ok(dict.new()), fn(acc, symbol) {
+    case acc {
+      Ok(info_dict) -> {
+        case fetch_stock_info(symbol, config) {
+          Ok(stock_info) -> Ok(dict.insert(info_dict, symbol, stock_info))
+          Error(e) -> Error(e)
         }
-        Error(e) -> Error(e)
       }
+      Error(e) -> Error(e)
     }
-  )
+  })
 }
 
 /// Get current price for a symbol
-pub fn get_current_price(symbol: String, config: YFinanceConfig) -> YFinanceResult(Float) {
+pub fn get_current_price(
+  symbol: String,
+  config: YFinanceConfig,
+) -> YFinanceResult(Float) {
   case get_stock_data(symbol, OneDay, OneDay, config) {
     Ok(stock_data) -> {
       case stock_data.data {
@@ -142,51 +163,59 @@ pub fn get_current_price_batch(
   symbols: List(String),
   config: YFinanceConfig,
 ) -> YFinanceResult(Dict(String, Float)) {
-  list.fold(
-    symbols,
-    Ok(dict.new()),
-    fn(acc, symbol) {
-      case acc {
-        Ok(price_dict) -> {
-          case get_current_price(symbol, config) {
-            Ok(price) -> Ok(dict.insert(price_dict, symbol, price))
-            Error(e) -> Error(e)
-          }
+  list.fold(symbols, Ok(dict.new()), fn(acc, symbol) {
+    case acc {
+      Ok(price_dict) -> {
+        case get_current_price(symbol, config) {
+          Ok(price) -> Ok(dict.insert(price_dict, symbol, price))
+          Error(e) -> Error(e)
         }
-        Error(e) -> Error(e)
       }
+      Error(e) -> Error(e)
     }
-  )
+  })
 }
 
 /// Get multiple time series for the same symbol with different intervals
 pub fn get_historical_data(
   symbol: String,
-  start_date: Int,  // Unix timestamp
-  end_date: Int,    // Unix timestamp
+  start_date: Int,
+  // Unix timestamp
+  end_date: Int,
+  // Unix timestamp
   interval: Interval,
   config: YFinanceConfig,
 ) -> YFinanceResult(StockData) {
   // TODO: Implement date-based historical data fetching
   // For now, use period-based approach
-  let period = OneYear  // Default period
+  let period = OneYear
+  // Default period
   get_stock_data(symbol, period, interval, config)
 }
 
 /// Get dividends for a symbol
-pub fn get_dividends(symbol: String, config: YFinanceConfig) -> YFinanceResult(List(#(Int, Float))) {
+pub fn get_dividends(
+  symbol: String,
+  config: YFinanceConfig,
+) -> YFinanceResult(List(#(Int, Float))) {
   // TODO: Implement dividends fetching
   Ok([])
 }
 
 /// Get splits for a symbol
-pub fn get_splits(symbol: String, config: YFinanceConfig) -> YFinanceResult(List(#(Int, Float))) {
+pub fn get_splits(
+  symbol: String,
+  config: YFinanceConfig,
+) -> YFinanceResult(List(#(Int, Float))) {
   // TODO: Implement splits fetching
   Ok([])
 }
 
 /// Search for symbols
-pub fn search_symbols(query: String, config: YFinanceConfig) -> YFinanceResult(List(String)) {
+pub fn search_symbols(
+  query: String,
+  config: YFinanceConfig,
+) -> YFinanceResult(List(String)) {
   // TODO: Implement symbol search
   Ok([])
 }
@@ -200,7 +229,8 @@ pub fn calculate_indicator(
     SimpleMovingAverage(period) -> calculate_sma(data, period)
     ExponentialMovingAverage(period) -> calculate_ema(data, period)
     RelativeStrengthIndex(period) -> calculate_rsi(data, period)
-    _ -> [] // TODO: Implement other indicators
+    _ -> []
+    // TODO: Implement other indicators
   }
 }
 
@@ -212,62 +242,56 @@ pub fn get_multiple_stocks(
   config: YFinanceConfig,
 ) -> YFinanceResult(Dict(String, StockData)) {
   let batch_size = config.batch_size
-  
+
   case symbols {
     [] -> Ok(dict.new())
     _ -> {
       // Split symbols into batches
       let symbol_batches = chunk_list(symbols, batch_size)
-      
+
       // Process each batch
-      list.fold(
-        symbol_batches,
-        Ok(dict.new()),
-        fn(acc, batch) {
-          case acc {
-            Ok(all_data) -> {
-              case get_stock_data_batch(batch, period, interval, config) {
-                Ok(batch_data) -> {
-                  let combined_data = dict.merge(all_data, batch_data)
-                  Ok(combined_data)
-                }
-                Error(e) -> Error(e)
+      list.fold(symbol_batches, Ok(dict.new()), fn(acc, batch) {
+        case acc {
+          Ok(all_data) -> {
+            case get_stock_data_batch(batch, period, interval, config) {
+              Ok(batch_data) -> {
+                let combined_data = dict.merge(all_data, batch_data)
+                Ok(combined_data)
               }
+              Error(e) -> Error(e)
             }
-            Error(e) -> Error(e)
           }
+          Error(e) -> Error(e)
         }
-      )
+      })
     }
   }
 }
 
 /// Get market data for indices
 pub fn get_market_data(
-  indices: List(String),  // e.g., ["^GSPC", "^DJI", "^IXIC"]
+  indices: List(String),
+  // e.g., ["^GSPC", "^DJI", "^IXIC"]
   config: YFinanceConfig,
 ) -> YFinanceResult(Dict(String, StockData)) {
-  list.fold(
-    indices,
-    Ok(dict.new()),
-    fn(acc, index) {
-      case acc {
-        Ok(market_data) -> {
-          case get_stock_data(index, OneDay, OneDay, config) {
-            Ok(stock_data) -> Ok(dict.insert(market_data, index, stock_data))
-            Error(e) -> Error(e)
-          }
+  list.fold(indices, Ok(dict.new()), fn(acc, index) {
+    case acc {
+      Ok(market_data) -> {
+        case get_stock_data(index, OneDay, OneDay, config) {
+          Ok(stock_data) -> Ok(dict.insert(market_data, index, stock_data))
+          Error(e) -> Error(e)
         }
-        Error(e) -> Error(e)
       }
+      Error(e) -> Error(e)
     }
-  )
+  })
 }
 
 /// Get cryptocurrency data
 pub fn get_crypto_data(
   crypto_symbol: String,
-  currency: String,  // e.g., "USD", "USDT"
+  currency: String,
+  // e.g., "USD", "USDT"
   period: Period,
   interval: Interval,
   config: YFinanceConfig,
@@ -289,13 +313,19 @@ pub fn get_forex_data(
 }
 
 /// Get earnings data
-pub fn get_earnings(symbol: String, config: YFinanceConfig) -> YFinanceResult(List(String)) {
+pub fn get_earnings(
+  symbol: String,
+  config: YFinanceConfig,
+) -> YFinanceResult(List(String)) {
   // TODO: Implement earnings data fetching
   Ok([])
 }
 
 /// Get financial statements
-pub fn get_financial_data(symbol: String, config: YFinanceConfig) -> YFinanceResult(String) {
+pub fn get_financial_data(
+  symbol: String,
+  config: YFinanceConfig,
+) -> YFinanceResult(String) {
   // TODO: Implement financial data fetching
   Ok("Financial data not implemented")
 }
@@ -308,36 +338,17 @@ pub fn format_stock_data(stock_data: StockData) -> String {
     [] -> None
     [latest, ..] -> Some(latest)
   }
-  
+
   let formatted = [
     "Symbol: " <> stock_data.symbol,
     "Currency: " <> currency,
     "Data Points: " <> int.to_string(data_points),
     case latest_data {
-      Some(latest) -> "Latest Close: " <> float.to_string(latest.close) <> " " <> currency
+      Some(latest) ->
+        "Latest Close: " <> float.to_string(latest.close) <> " " <> currency
       None -> "No price data available"
-    }
+    },
   ]
-  
-  string.join(formatted, "\n")
-}
 
-/// Main entry point (for testing)
-pub fn main() {
-  let config = default_config()
-  io.println("Yahoo Finance API Client initialized")
-  
-  // Example usage
-  let symbols = ["AAPL", "GOOGL", "MSFT"]
-  io.println("Fetching batch data for: " <> string.join(symbols, ", "))
-  
-  case get_stock_info_batch(symbols, config) {
-    Ok(info_dict) -> {
-      io.println("Successfully fetched stock info for batch")
-      // TODO: Print formatted info
-    }
-    Error(e) -> {
-      io.println("Error: " <> format_error(e))
-    }
-  }
+  string.join(formatted, "\n")
 }

@@ -1,6 +1,8 @@
 //// Type definitions for Yahoo Finance API
 //// Similar to the Python yfinance package
 
+import gleam/dict
+
 /// Time intervals for stock data
 pub type Interval {
   OneMinute
@@ -18,12 +20,12 @@ pub type Interval {
   ThreeMonths
 }
 
-/// Time periods for stock data  
+/// Time periods for stock data
 pub type Period {
-  OneDay
-  FiveDays
-  OneMonth
-  ThreeMonths
+  PeriodOneDay
+  PeriodFiveDays
+  PeriodOneMonth
+  PeriodThreeMonths
   SixMonths
   OneYear
   TwoYears
@@ -36,12 +38,18 @@ pub type Period {
 /// Types of financial instruments
 pub type Instrument {
   Stock(String)
-  Crypto(String, String)  // crypto symbol, currency
-  Forex(String, String)   // forex pair
-  Fund(String)            // fund symbol
-  Index(String)           // index symbol
-  ETF(String)             // ETF symbol
-  Bond(String)            // bond symbol
+  Crypto(String, String)
+  // crypto symbol, currency
+  Forex(String, String)
+  // forex pair
+  Fund(String)
+  // fund symbol
+  Index(String)
+  // index symbol
+  ETF(String)
+  // ETF symbol
+  Bond(String)
+  // bond symbol
 }
 
 /// Comprehensive stock information
@@ -110,12 +118,18 @@ pub type StockData {
 
 /// Technical indicators
 pub type Indicator {
-  SimpleMovingAverage(Int)     // period
-  ExponentialMovingAverage(Int) // period
-  RelativeStrengthIndex(Int)    // period
-  MovingAverageConvergence(Int) // fast, slow, signal
-  BollingerBands(Int, Float)    // period, standard deviations
-  Stochastic(Int, Int)          // %K period, %D period
+  SimpleMovingAverage(Int)
+  // period
+  ExponentialMovingAverage(Int)
+  // period
+  RelativeStrengthIndex(Int)
+  // period
+  MovingAverageConvergence(Int)
+  // fast, slow, signal
+  BollingerBands(Int, Float)
+  // period, standard deviations
+  Stochastic(Int, Int)
+  // %K period, %D period
 }
 
 /// Configuration for proxy settings
@@ -125,7 +139,8 @@ pub type ProxyConfig {
     port: Int,
     username: Result(String, String),
     password: Result(String, String),
-    scheme: String,  // "http" or "https"
+    scheme: String,
+    // "http" or "https"
   )
 }
 
@@ -134,16 +149,19 @@ pub type YFinanceConfig {
   YFinanceConfig(
     proxy: Result(ProxyConfig, String),
     user_agent: String,
-    timeout: Int,  // milliseconds
+    timeout: Int,
+    // milliseconds
     max_retries: Int,
-    batch_size: Int, // Number of symbols per batch request
+    batch_size: Int,
+    // Number of symbols per batch request
   )
 }
 
 /// Error types
 pub type YFinanceError {
   NetworkError(String)
-  ApiError(String, Int)  // message, status code
+  ApiError(String, Int)
+  // message, status code
   ParseError(String)
   ValidationError(String)
   RateLimitError(String)
@@ -157,15 +175,24 @@ pub type YFinanceResult(a) =
 
 /// Yahoo Finance API endpoints
 pub type YahooEndpoint {
-  QuoteEndpoint           // /quote
-  ChartEndpoint           // /chart
-  SummaryEndpoint         // /summary
-  HistoricalEndpoint      // /historical
-  SearchEndpoint          // /search
-  ProfileEndpoint         // /profile
-  StatisticsEndpoint      // /statistics
-  FinancialDataEndpoint   // /financial-data
-  DefaultKeyStatistics    // /default-key-statistics
+  QuoteEndpoint
+  // /quote
+  ChartEndpoint
+  // /chart
+  SummaryEndpoint
+  // /summary
+  HistoricalEndpoint
+  // /historical
+  SearchEndpoint
+  // /search
+  ProfileEndpoint
+  // /profile
+  StatisticsEndpoint
+  // /statistics
+  FinancialDataEndpoint
+  // /financial-data
+  DefaultKeyStatistics
+  // /default-key-statistics
 }
 
 /// HTTP types for the client
@@ -180,7 +207,7 @@ pub type HttpRequest {
   HttpRequest(
     method: HttpMethod,
     url: String,
-    headers: Dict(String, String),
+    headers: dict.Dict(String, String),
     body: Result(String, String),
   )
 }
@@ -188,7 +215,7 @@ pub type HttpRequest {
 pub type HttpResponse {
   HttpResponse(
     status_code: Int,
-    headers: Dict(String, String),
+    headers: dict.Dict(String, String),
     body: String,
   )
 }

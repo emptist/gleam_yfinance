@@ -7,7 +7,18 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
 
+import yfinance/types.{
+  type Instrument, type Interval, type Period, type YFinanceError,
+  type ProxyConfig, type YahooEndpoint, type StockInfo, type Ohlcv
+}
+
 /// Convert interval to string for API calls
+import yfinance/types.{
+  OneMinute, TwoMinutes, FiveMinutes, FifteenMinutes,
+  ThirtyMinutes, SixtyMinutes, NinetyMinutes, OneHour,
+  OneDay, FiveDays, OneWeek, OneMonth, ThreeMonths
+}
+
 pub fn interval_to_string(interval: Interval) -> String {
   case interval {
     OneMinute -> "1m"
@@ -27,12 +38,17 @@ pub fn interval_to_string(interval: Interval) -> String {
 }
 
 /// Convert period to string for API calls
+import yfinance/types.{
+  PeriodOneDay, PeriodFiveDays, PeriodOneMonth, PeriodThreeMonths,
+  SixMonths, OneYear, TwoYears, FiveYears, TenYears, YearToDate, Max
+}
+
 pub fn period_to_string(period: Period) -> String {
   case period {
-    OneDay -> "1d"
-    FiveDays -> "5d"
-    OneMonth -> "1mo"
-    ThreeMonths -> "3mo"
+    PeriodOneDay -> "1d"
+    PeriodFiveDays -> "5d"
+    PeriodOneMonth -> "1mo"
+    PeriodThreeMonths -> "3mo"
     SixMonths -> "6mo"
     OneYear -> "1y"
     TwoYears -> "2y"
@@ -44,6 +60,10 @@ pub fn period_to_string(period: Period) -> String {
 }
 
 /// Convert instrument to Yahoo Finance symbol format
+import yfinance/types.{
+  Stock, Crypto, Forex, Fund, Index, ETF, Bond
+}
+
 pub fn instrument_to_symbol(instrument: Instrument) -> String {
   case instrument {
     Stock(symbol) -> symbol
@@ -68,7 +88,7 @@ pub fn validate_interval_period(interval: Interval, period: Period) -> Bool {
     | NinetyMinutes
     | OneHour -> {
       case period {
-        OneDay | FiveDays -> True
+        PeriodOneDay | PeriodFiveDays -> True
         _ -> False
       }
     }
@@ -100,7 +120,7 @@ pub fn float_to_string_safe(
 ) -> String {
   case value {
     Ok(float_val) -> {
-      let precision_factor = int.to_float(int.pow(10, precision))
+      let precision_factor = float.power(10.0, int.to_float(precision))
       let rounded =
         float.round(float_val *. precision_factor) /. precision_factor
       float.to_string(rounded)
@@ -134,6 +154,11 @@ pub fn parse_int_safe(value: String) -> Result(Int, String) {
 }
 
 /// Format error messages
+import yfinance/types.{
+  NetworkError, ApiError, ParseError, ValidationError,
+  RateLimitError, ProxyError, TimeoutError
+}
+
 pub fn format_error(error: YFinanceError) -> String {
   case error {
     NetworkError(msg) -> "Network Error: " <> msg
@@ -176,6 +201,12 @@ pub fn build_yahoo_url(
   let base_url = "https://query1.finance.yahoo.com"
 
   let endpoint_path = case endpoint {
+import yfinance/types.{
+  QuoteEndpoint, ChartEndpoint, SummaryEndpoint, HistoricalEndpoint,
+  SearchEndpoint, ProfileEndpoint, StatisticsEndpoint,
+  FinancialDataEndpoint, DefaultKeyStatistics
+}
+
     QuoteEndpoint -> "/v8/finance/chart"
     ChartEndpoint -> "/v8/finance/chart"
     SummaryEndpoint -> "/v10/finance/quoteSummary"
@@ -382,7 +413,7 @@ fn retry_with_backoff_impl(
         Ok(result) -> Ok(result)
         Error(error) -> {
           // Wait before retrying (in real implementation, this would be async)
-          let backoff_delay = delay_ms * int.pow(2, attempt)
+          let backoff_delay = delay_ms * int.power(2, attempt)
           retry_with_backoff_impl(operation, max_retries, delay_ms, attempt + 1)
         }
       }
