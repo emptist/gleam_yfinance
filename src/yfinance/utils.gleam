@@ -8,20 +8,15 @@ import gleam/option.{type Option, None, Some}
 import gleam/string
 
 import yfinance/types.{
-  type Instrument, type Interval, type Period, type YFinanceError,
-  type ProxyConfig, type YahooEndpoint, type StockInfo, type Ohlcv,
-  OneMinute, TwoMinutes, FiveMinutes, FifteenMinutes,
-  ThirtyMinutes, SixtyMinutes, NinetyMinutes, OneHour,
-  OneDay, FiveDays, OneWeek, OneMonth, ThreeMonths,
-  PeriodOneDay, PeriodFiveDays, PeriodOneMonth, PeriodThreeMonths,
-  PeriodSixMonths, PeriodOneYear, PeriodTwoYears, PeriodFiveYears,
-  PeriodTenYears, PeriodYearToDate, PeriodMax,
-  Stock, Crypto, Forex, Fund, Index, ETF, Bond,
-  QuoteEndpoint, ChartEndpoint, SummaryEndpoint, HistoricalEndpoint,
-  SearchEndpoint, ProfileEndpoint, StatisticsEndpoint,
-  FinancialDataEndpoint, DefaultKeyStatistics,
-  NetworkError, ApiError, ParseError, ValidationError,
-  RateLimitError, ProxyError, TimeoutError
+  type Instrument, type Interval, type Ohlcv, type Period, type ProxyConfig,
+  type StockInfo, type YFinanceError, type YahooEndpoint, ApiError, Bond,
+  ChartEndpoint, Crypto, DefaultKeyStatistics, ETF, FifteenMinutes,
+  FinancialDataEndpoint, FiveDays, FiveMinutes, Forex, Fund, HistoricalEndpoint,
+  Index, NetworkError, NinetyMinutes, OneDay, OneHour, OneMinute, OneMonth,
+  OneWeek, ParseError, PeriodFiveDays, PeriodOneDay, PeriodOneMonth,
+  PeriodThreeMonths, ProfileEndpoint, ProxyError, QuoteEndpoint, RateLimitError,
+  SearchEndpoint, SixtyMinutes, StatisticsEndpoint, Stock, SummaryEndpoint,
+  ThirtyMinutes, ThreeMonths, TimeoutError, TwoMinutes, ValidationError,
 }
 
 /// Convert interval to string for API calls
@@ -50,13 +45,8 @@ pub fn period_to_string(period: Period) -> String {
     PeriodFiveDays -> "5d"
     PeriodOneMonth -> "1mo"
     PeriodThreeMonths -> "3mo"
-    PeriodSixMonths -> "6mo"
-    PeriodOneYear -> "1y"
-    PeriodTwoYears -> "2y"
-    PeriodFiveYears -> "5y"
-    PeriodTenYears -> "10y"
-    PeriodYearToDate -> "ytd"
-    PeriodMax -> "max"
+    _ -> "1d"
+    // Default fallback
   }
 }
 
@@ -117,7 +107,10 @@ pub fn float_to_string_safe(
 ) -> String {
   case value {
     Ok(float_val) -> {
-      let precision_factor = float.power(10.0, int.to_float(precision))
+      let precision_factor = case float.power(10.0, int.to_float(precision)) {
+        Ok(val) -> val
+        Error(_) -> 10.0
+      }
       let rounded =
         float.round(float_val *. precision_factor) /. precision_factor
       float.to_string(rounded)
@@ -223,16 +216,17 @@ pub fn build_request_params(
   include_pre_post: Bool,
   include_adjustments: Bool,
 ) -> Dict(String, String) {
-  dict.from_list([
-    #("symbol", symbol),
-    #("range", period),
-    #("interval", interval),
-    #("includePrePost", bool_to_string(include_pre_post)),
-    #("events", "div%2Csplits"),
-  ])
-  |> case include_adjustments {
-    True -> dict.insert(_, "includeAdjustedClose", "true")
-    False -> _
+  let base_params =
+    dict.from_list([
+      #("symbol", symbol),
+      #("range", period),
+      #("interval", interval),
+      #("includePrePost", bool_to_string(include_pre_post)),
+      #("events", "div%2Csplits"),
+    ])
+  case include_adjustments {
+    True -> dict.insert(base_params, "includeAdjustedClose", "true")
+    False -> base_params
   }
 }
 
@@ -278,7 +272,10 @@ pub fn calculate_ema(data: List(Ohlcv), period: Int) -> List(Float) {
       // Calculate EMA for remaining data points
       list.drop(closes, period)
       |> list.fold([initial_ema], fn(emas, price) {
-        let last_ema = list.first(emas) |> option.unwrap(0.0)
+        let last_ema = case list.first(emas) {
+          Ok(val) -> val
+          Error(_) -> 0.0
+        }
         let new_ema = price *. multiplier +. last_ema *. { 1.0 -. multiplier }
         [new_ema, ..emas]
       })
@@ -301,10 +298,15 @@ pub fn calculate_rsi(data: List(Ohlcv), period: Int) -> List(Float) {
       let changes =
         list.range(0, data_length - 2)
         |> list.map(fn(i) {
-          list.drop(closes, i + 1)
-          |> list.first
-          |> option.unwrap(closes.0)
-          -. closes.0
+          let current = case list.drop(closes, i) {
+            [val, ..] -> val
+            _ -> 0.0
+          }
+          let next = case list.drop(closes, i + 1) {
+            [val, ..] -> val
+            _ -> current
+          }
+          next -. current
         })
 
       // Calculate gains and losses
@@ -319,16 +321,16 @@ pub fn calculate_rsi(data: List(Ohlcv), period: Int) -> List(Float) {
         True -> {
           let avg_gain =
             list.take(gains, period)
-            |> list.fold(0.0, fn(sum, gain) { sum +. gain })
-            /. int.to_float(period)
+            |> list.fold(0.0, fn(acc, gain) { acc +. gain })
           let avg_loss =
             list.take(losses, period)
-            |> list.fold(0.0, fn(sum, loss) { sum +. loss })
-            /. int.to_float(period)
+            |> list.fold(0.0, fn(acc, loss) { acc +. loss })
+          let final_avg_gain = avg_gain /. int.to_float(period)
+          let final_avg_loss = avg_loss /. int.to_float(period)
 
-          case avg_loss >. 0.0 {
+          case final_avg_loss >. 0.0 {
             True -> {
-              let rs = avg_gain /. avg_loss
+              let rs = final_avg_gain /. final_avg_loss
               let rsi = 100.0 -. { 100.0 /. { 1.0 +. rs } }
               [rsi]
             }
@@ -399,7 +401,11 @@ fn retry_with_backoff_impl(
         Ok(result) -> Ok(result)
         Error(error) -> {
           // Wait before retrying (in real implementation, this would be async)
-          let backoff_delay = delay_ms * int.power(2, attempt)
+          let power_result = case int.power(2, attempt) {
+            Ok(val) -> int.to_float(val)
+            Error(_) -> 1.0
+          }
+          let backoff_delay = int.to_float(delay_ms) *. power_result
           retry_with_backoff_impl(operation, max_retries, delay_ms, attempt + 1)
         }
       }
