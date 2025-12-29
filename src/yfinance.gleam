@@ -9,7 +9,6 @@ import gleam/string
 
 // Import all submodules
 import yfinance/api
-import yfinance/http_client
 import yfinance/types
 import yfinance/utils
 
@@ -26,7 +25,7 @@ pub type Instrument =
 pub type StockInfo =
   types.StockInfo
 
-pub type Ohlcv =
+pub type OHLCV =
   types.OHLCV
 
 pub type StockData =

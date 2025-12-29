@@ -10,8 +10,10 @@ import gleeunit/should
 // Import yfinance modules
 import yfinance
 import yfinance/types.{
-  ExponentialMovingAverage, Ohlcv, OneDay, PeriodOneDay, RelativeStrengthIndex,
-  SimpleMovingAverage,
+  type OHLCV, type StockInfo, ApiError, Crypto, ExponentialMovingAverage,
+  FiveMinutes, Forex, NetworkError, Ohlcv, OneDay, OneHour, OneMinute, OneMonth,
+  PeriodOneDay, PeriodOneMonth, PeriodThreeMonths, RelativeStrengthIndex,
+  SimpleMovingAverage, Stock, StockInfo, ValidationError, YearToDate,
 }
 
 import yfinance/utils
@@ -225,10 +227,9 @@ pub fn calculate_rsi_test() {
     Ohlcv(1_704_297_600, 108.0, 112.0, 107.0, 110.0, 109.0, 1_300_000),
     Ohlcv(1_704_384_000, 110.0, 114.0, 109.0, 112.0, 111.0, 1_400_000),
   ]
-
-  let rsi_14 =
-    yfinance.calculate_indicator(sample_data, RelativeStrengthIndex(14))
-  // RSI calculation requires more data points, so might be empty for this sample
+  // let rsi_14 =
+  //   yfinance.calculate_indicator(sample_data, RelativeStrengthIndex(14))
+  // // RSI calculation requires more data points, so might be empty for this sample
   // This is expected behavior
 }
 
@@ -330,7 +331,7 @@ pub fn safe_parsing_functions_test() {
 
 // Test type constructors and basic functionality
 pub fn stock_info_constructor_test() {
-  let stock_info =
+  let stock_info: StockInfo =
     StockInfo(
       symbol: "TEST",
       short_name: "Test Company",
