@@ -2,6 +2,26 @@
 
 A comprehensive Yahoo Finance API client for the Gleam programming language, providing similar functionality to the popular Python `yfinance` package.
 
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+- [Examples](#examples)
+  - [Basic Stock Data](#basic-stock-data)
+  - [Batch Data Fetching](#batch-data-fetching)
+  - [Technical Analysis](#technical-analysis)
+  - [Sample Usage Functions](#sample-usage-functions)
+- [Error Handling](#error-handling)
+- [Advanced Usage](#advanced-usage)
+- [Performance Tips](#performance-tips)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Disclaimer](#disclaimer)
+- [Acknowledgments](#acknowledgments)
+
 ## Features
 
 ### Core Functionality
@@ -319,6 +339,87 @@ case yfinance.get_stock_data("INVALID_SYMBOL", yfinance.Period.OneDay, yfinance.
 }
 ```
 
+## Sample Usage Functions
+
+The library includes comprehensive sample usage functions in [`examples/examples.gleam`](examples/examples.gleam) that demonstrate how to:
+
+### Running the Examples
+
+To run all examples:
+
+```bash
+gleam run -m examples
+```
+
+Or run specific examples:
+
+```gleam
+import examples
+
+// Run all examples
+examples.run_all_examples()
+
+// Run individual examples
+examples.fetch_single_stock_1d()
+examples.fetch_multiple_stocks_1d()
+examples.calculate_sma_example()
+examples.calculate_ema_example()
+examples.calculate_rsi_example()
+examples.fetch_and_calculate_indicators()
+examples.get_current_prices()
+examples.get_stock_information()
+```
+
+### Available Examples
+
+1. **fetch_single_stock_1d**: Fetch 1-day data for a single stock (AAPL)
+2. **fetch_multiple_stocks_1d**: Fetch 1-day data for multiple stocks in batch
+3. **calculate_sma_example**: Calculate Simple Moving Average (SMA) with sample data
+4. **calculate_ema_example**: Calculate Exponential Moving Average (EMA) with sample data
+5. **calculate_rsi_example**: Calculate Relative Strength Index (RSI) with sample data
+6. **fetch_and_calculate_indicators**: Fetch real data and calculate indicators
+7. **get_current_prices**: Get current prices for multiple stocks
+8. **get_stock_information**: Get comprehensive stock information
+
+### Example Output
+
+When you run the examples, you'll see output like:
+
+```
+========================================
+Yahoo Finance API - Sample Usage Examples
+========================================
+
+=== Example 1: Fetch 1-Day Data for AAPL ===
+Symbol: AAPL
+Currency: USD
+Data Points: 1
+Latest Price:
+  Open: 100.0
+  High: 105.0
+  Low: 95.0
+  Close: 103.0
+  Volume: 1000000
+
+=== Example 2: Fetch 1-Day Data for Multiple Stocks ===
+Successfully fetched data for 4 symbols
+AAPL: $103.0
+GOOGL: $106.0
+MSFT: $108.0
+AMZN: $110.0
+
+=== Example 3: Calculate Simple Moving Average ===
+3-period SMA values:
+  105.66666666666667
+  108.0
+  111.33333333333333
+  ...
+
+========================================
+All examples completed!
+========================================
+```
+
 ## Advanced Usage
 
 ### Custom Configuration
@@ -381,16 +482,74 @@ pub fn mixed_assets() {
 
 ```
 src/
-├── yfinance.gleam          # Main module with re-exports
+├── yfinance.gleam          # Main module with re-exports and public API
 └── yfinance/
-    ├── types.gleam         # Type definitions
-    ├── utils.gleam         # Utility functions
-    ├── http_client.gleam   # HTTP client implementation
-    └── api.gleam           # Main API functions
+    ├── types.gleam         # Type definitions (Interval, Period, StockData, etc.)
+    ├── utils.gleam         # Utility functions (indicators, conversions, validation)
+    ├── http_client.gleam   # HTTP client implementation (mocked for now)
+    └── api.gleam           # Main API functions (get_stock_data, etc.)
+
+examples/
+└── examples.gleam          # Comprehensive sample usage examples
 
 test/
 └── yfinance_test.gleam     # Comprehensive test suite
+
+docs/
+└── (additional documentation)
 ```
+
+### Module Overview
+
+#### `yfinance.gleam`
+Main entry point that re-exports all public types and functions for convenient access.
+
+#### `yfinance/types.gleam`
+Contains all type definitions:
+- `Interval`: Time intervals (OneMinute, OneDay, etc.)
+- `Period`: Time periods (PeriodOneDay, OneYear, etc.)
+- `Instrument`: Asset types (Stock, Crypto, Forex, etc.)
+- `StockInfo`: Comprehensive stock information
+- `Ohlcv`: OHLCV (Open, High, Low, Close, Volume) data point
+- `StockData`: Stock data with metadata
+- `Indicator`: Technical indicators (SMA, EMA, RSI, etc.)
+- `ProxyConfig`: Proxy configuration
+- `YFinanceConfig`: API request configuration
+- `YFinanceError`: Error types
+
+#### `yfinance/utils.gleam`
+Utility functions including:
+- Interval and period conversions
+- Instrument to symbol conversion
+- Technical indicator calculations (SMA, EMA, RSI)
+- Validation functions
+- Error formatting
+- List chunking
+- Retry logic with backoff
+
+#### `yfinance/http_client.gleam`
+HTTP client implementation (currently mocked):
+- Request execution with retry logic
+- Response parsing
+- Rate limit handling
+- Proxy support
+
+#### `yfinance/api.gleam`
+Main API functions:
+- Configuration management
+- Stock data fetching (single and batch)
+- Stock information retrieval
+- Current price queries
+- Technical indicator calculations
+- Specialized data fetching (crypto, forex, indices)
+
+#### `examples/examples.gleam`
+Comprehensive examples demonstrating:
+- Fetching 1-day data for single and multiple stocks
+- Calculating technical indicators
+- Getting current prices
+- Retrieving stock information
+- Error handling patterns
 
 ## Contributing
 
@@ -413,3 +572,94 @@ This library is for educational and research purposes. The data provided by Yaho
 - Inspired by the Python `yfinance` package
 - Built with the Gleam programming language
 - Uses Yahoo Finance API for market data
+
+## Getting Started Guide
+
+### 1. Installation
+
+Add the dependency to your `gleam.toml`:
+
+```toml
+[dependencies]
+yfinance = ">= 1.0.0 and < 2.0.0"
+gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+gleam_http = ">= 3.0.0 and < 4.0.0"
+gleam_json = ">= 0.7.0 and < 1.0.0"
+gleam_result = ">= 0.6.0 and < 1.0.0"
+```
+
+### 2. Basic Usage
+
+```gleam
+import gleam/io
+import yfinance
+
+pub fn main() {
+  let config = yfinance.default_config()
+  
+  case yfinance.get_stock_data("AAPL", yfinance.PeriodOneDay, yfinance.OneDay, config) {
+    Ok(stock_data) -> {
+      io.println("Symbol: " <> stock_data.symbol)
+      io.println("Latest Price: " <> float.to_string(latest.close))
+    }
+    Error(e) -> {
+      io.println("Error: " <> yfinance.format_error(e))
+    }
+  }
+}
+```
+
+### 3. Run Examples
+
+```bash
+# Run all examples
+gleam run -m examples
+
+# Or run specific examples in your code
+import examples
+examples.run_all_examples()
+```
+
+### 4. Explore the API
+
+Check out the [API Reference](#api-reference) section for detailed documentation of all available functions.
+
+### 5. Technical Analysis
+
+The library includes built-in technical indicators:
+
+```gleam
+// Calculate moving averages
+let sma_20 = yfinance.calculate_indicator(data, yfinance.SimpleMovingAverage(20))
+let ema_20 = yfinance.calculate_indicator(data, yfinance.ExponentialMovingAverage(20))
+let rsi_14 = yfinance.calculate_indicator(data, yfinance.RelativeStrengthIndex(14))
+```
+
+## Development Status
+
+This project is currently in active development. The HTTP client implementation is mocked for testing purposes. Future versions will include:
+
+- Full HTTP client implementation with real API calls
+- Additional technical indicators (MACD, Bollinger Bands, Stochastic)
+- Support for more data types (options, futures, etc.)
+- Enhanced error handling and retry logic
+- Performance optimizations for large-scale data fetching
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue**: "No data available" error
+- **Solution**: Check if the symbol is valid and the market is open
+
+**Issue**: "Invalid interval for given period" error
+- **Solution**: Ensure the interval is compatible with the period (e.g., minute intervals only work with short periods)
+
+**Issue**: "Rate limit exceeded" error
+- **Solution**: Implement delays between requests or use a proxy
+
+### Getting Help
+
+- Check the [examples](#sample-usage-functions) for usage patterns
+- Review the [test suite](test/yfinance_test.gleam) for more examples
+- Open an issue on GitHub for bugs or feature requests

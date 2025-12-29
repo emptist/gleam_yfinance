@@ -10,12 +10,11 @@ import gleam/string
 
 // Import types and utils
 import yfinance/types.{
-  type HttpRequest, type HttpResponse, type HttpResult, type Interval,
-  type Ohlcv, type Period, type ProxyConfig, type StockData, type StockInfo,
-  type YFinanceConfig, type YFinanceError, type YFinanceResult,
-  type YahooEndpoint, ChartEndpoint, GET, HttpRequest, HttpResponse,
-  NetworkError, OneDay, ParseError, PeriodOneDay, RateLimitError, StockData,
-  StockInfo, SummaryEndpoint,
+  type HttpRequest, type HttpResponse, type HttpResult, type Ohlcv,
+  type ProxyConfig, type StockData, type StockInfo, type YFinanceConfig,
+  type YFinanceError, type YFinanceResult, type YahooEndpoint, ChartEndpoint,
+  GET, HttpRequest, HttpResponse, NetworkError, OneDay, ParseError, PeriodOneDay,
+  RateLimitError, StockData, StockInfo, SummaryEndpoint,
 }
 import yfinance/utils.{build_request_params, build_yahoo_url, create_headers}
 
