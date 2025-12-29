@@ -2,26 +2,22 @@
 //// Handles proxy support, error handling, and JSON parsing
 
 import gleam/dict.{type Dict}
-import gleam/float
 import gleam/int
-import gleam/io
 import gleam/json
 import gleam/list
-import gleam/option.{type Option, None, Some}
-import gleam/result
+import gleam/option.{None, Some}
 import gleam/string
 
 // Import types and utils
 import yfinance/types.{
-  type HttpRequest, type HttpResponse, type HttpResult, type YFinanceConfig,
-  type YFinanceError, type NetworkError, type ParseError, type RateLimitError,
-  type StockData, type StockInfo, type Interval, type Period, type OneDay,
-  type Ohlcv, type ProxyConfig, type YahooEndpoint, type ChartEndpoint,
-  type SummaryEndpoint, type HttpMethod, type GET
+  type HttpRequest, type HttpResponse, type HttpResult, type Interval,
+  type Ohlcv, type Period, type ProxyConfig, type StockData, type StockInfo,
+  type YFinanceConfig, type YFinanceError, type YFinanceResult,
+  type YahooEndpoint, ChartEndpoint, GET, HttpRequest, HttpResponse,
+  NetworkError, OneDay, ParseError, PeriodOneDay, RateLimitError, StockData,
+  StockInfo, SummaryEndpoint,
 }
-import yfinance/utils.{
-  build_request_params, build_yahoo_url, create_headers
-}
+import yfinance/utils.{build_request_params, build_yahoo_url, create_headers}
 
 /// Execute HTTP request with retry logic
 pub fn execute_request(
@@ -58,77 +54,67 @@ fn execute_request_with_retry(
 
 /// Parse Yahoo Finance quote response
 pub fn parse_quote_response(response: HttpResponse) -> YFinanceResult(StockData) {
-  case json.decode(response.body) {
-    Ok(json_value) -> {
-      // TODO: Parse the actual JSON structure
-      Ok(StockData(
-        symbol: "AAPL",
-        // Extract from JSON
-        interval: OneDay,
-        // Extract from request
-        period: OneDay,
-        // Extract from request
-        data: [],
-        // Parse OHLCV data
-        currency: "USD",
-        // Extract from JSON
-        symbol_info: Error("Not implemented"),
-        // Parse stock info
-        is_crypto: False,
-        is_forex: False,
-        exchange: Error("Not implemented"),
-      ))
-    }
-    Error(_) -> Error(ParseError("Failed to parse JSON response"))
-  }
+  // TODO: Implement actual JSON parsing - using temporary mock
+  Ok(StockData(
+    symbol: "AAPL",
+    // Extract from JSON
+    interval: OneDay,
+    // Extract from request
+    period: PeriodOneDay,
+    // Extract from request
+    data: [],
+    // Parse OHLCV data
+    currency: "USD",
+    // Extract from JSON
+    symbol_info: Error("Not implemented"),
+    // Parse stock info
+    is_crypto: False,
+    is_forex: False,
+    exchange: Error("Not implemented"),
+  ))
 }
 
 /// Parse Yahoo Finance summary response
 pub fn parse_summary_response(
   response: HttpResponse,
 ) -> YFinanceResult(StockInfo) {
-  case json.decode(response.body) {
-    Ok(json_value) -> {
-      // TODO: Parse the actual Yahoo Finance summary JSON structure
-      Ok(StockInfo(
-        symbol: "AAPL",
-        // Extract from JSON
-        short_name: "Apple Inc.",
-        // Extract from JSON
-        long_name: "Apple Inc.",
-        // Extract from JSON
-        currency: "USD",
-        // Extract from JSON
-        market_cap: Error("Not implemented"),
-        enterprise_value: Error("Not implemented"),
-        trailing_pe: Error("Not implemented"),
-        forward_pe: Error("Not implemented"),
-        peg_ratio: Error("Not implemented"),
-        price_to_book: Error("Not implemented"),
-        price_to_sales: Error("Not implemented"),
-        dividend_yield: Error("Not implemented"),
-        earnings_growth: Error("Not implemented"),
-        revenue_growth: Error("Not implemented"),
-        profit_margin: Error("Not implemented"),
-        operating_margin: Error("Not implemented"),
-        return_on_assets: Error("Not implemented"),
-        return_on_equity: Error("Not implemented"),
-        beta: Error("Not implemented"),
-        shares_outstanding: Error("Not implemented"),
-        book_value: Error("Not implemented"),
-        fifty_two_week_high: Error("Not implemented"),
-        fifty_two_week_low: Error("Not implemented"),
-        sector: Error("Not implemented"),
-        industry: Error("Not implemented"),
-        country: Error("Not implemented"),
-        website: Error("Not implemented"),
-        business_summary: Error("Not implemented"),
-        full_time_employees: Error("Not implemented"),
-        timestamp: 0,
-      ))
-    }
-    Error(_) -> Error(ParseError("Failed to parse JSON response"))
-  }
+  // TODO: Implement actual JSON parsing - using temporary mock
+  Ok(StockInfo(
+    symbol: "AAPL",
+    // Extract from JSON
+    short_name: "Apple Inc.",
+    // Extract from JSON
+    long_name: "Apple Inc.",
+    // Extract from JSON
+    currency: "USD",
+    // Extract from JSON
+    market_cap: Error("Not implemented"),
+    enterprise_value: Error("Not implemented"),
+    trailing_pe: Error("Not implemented"),
+    forward_pe: Error("Not implemented"),
+    peg_ratio: Error("Not implemented"),
+    price_to_book: Error("Not implemented"),
+    price_to_sales: Error("Not implemented"),
+    dividend_yield: Error("Not implemented"),
+    earnings_growth: Error("Not implemented"),
+    revenue_growth: Error("Not implemented"),
+    profit_margin: Error("Not implemented"),
+    operating_margin: Error("Not implemented"),
+    return_on_assets: Error("Not implemented"),
+    return_on_equity: Error("Not implemented"),
+    beta: Error("Not implemented"),
+    shares_outstanding: Error("Not implemented"),
+    book_value: Error("Not implemented"),
+    fifty_two_week_high: Error("Not implemented"),
+    fifty_two_week_low: Error("Not implemented"),
+    sector: Error("Not implemented"),
+    industry: Error("Not implemented"),
+    country: Error("Not implemented"),
+    website: Error("Not implemented"),
+    business_summary: Error("Not implemented"),
+    full_time_employees: Error("Not implemented"),
+    timestamp: 0,
+  ))
 }
 
 /// Fetch stock data from Yahoo Finance
@@ -245,7 +231,7 @@ pub fn handle_rate_limit(
 }
 
 /// Parse OHLCV data from Yahoo Finance response
-pub fn parse_ohlcv_data(json_data: json.Json) -> List(Ohlcv) {
+pub fn parse_ohlcv_data(_json_data: json.Json) -> List(Ohlcv) {
   // TODO: Implement actual JSON parsing for OHLCV data
   // This would parse the timestamps, opens, highs, lows, closes, volumes
   []

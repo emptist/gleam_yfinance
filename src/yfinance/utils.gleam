@@ -118,7 +118,10 @@ pub fn float_to_string_safe(
         }
       let rounded = {
         case precision_factor {
-          Ok(val) -> float.round(result) /. val
+          Ok(val) -> {
+            let rounded_result = int.to_float(float.round(result))
+            rounded_result /. val
+          }
           Error(_) -> result
         }
       }

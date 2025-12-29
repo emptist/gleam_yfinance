@@ -15,9 +15,11 @@ import yfinance/http_client.{
   fetch_stock_data, fetch_stock_data_batch, fetch_stock_info,
 }
 import yfinance/types.{
-  type Indicator, type Interval, type Ohlcv, type OneDay, type OneYear,
-  type Period, type ProxyConfig, type StockData, type StockInfo,
-  type ValidationError, type YFinanceConfig, type YFinanceError,
+  type Indicator, type Interval, type Ohlcv, type Period, type ProxyConfig,
+  type StockData, type StockInfo, type YFinanceConfig, type YFinanceError,
+  type YFinanceResult, ExponentialMovingAverage, OneDay, OneYear, PeriodOneDay,
+  ProxyConfig, RelativeStrengthIndex, SimpleMovingAverage, ValidationError,
+  YFinanceConfig,
 }
 import yfinance/utils.{
   calculate_ema, calculate_rsi, calculate_sma, chunk_list, format_error,
@@ -146,12 +148,11 @@ pub fn get_current_price(
   symbol: String,
   config: YFinanceConfig,
 ) -> YFinanceResult(Float) {
-  case get_stock_data(symbol, OneDay, OneDay, config) {
+  case get_stock_data(symbol, PeriodOneDay, OneDay, config) {
     Ok(stock_data) -> {
       case stock_data.data {
         [] -> Error(ValidationError("No data available for symbol: " <> symbol))
         [latest_data, ..] -> Ok(latest_data.close)
-        _ -> Error(ValidationError("No data available for symbol: " <> symbol))
       }
     }
     Error(e) -> Error(e)
@@ -277,7 +278,7 @@ pub fn get_market_data(
   list.fold(indices, Ok(dict.new()), fn(acc, index) {
     case acc {
       Ok(market_data) -> {
-        case get_stock_data(index, OneDay, OneDay, config) {
+        case get_stock_data(index, PeriodOneDay, OneDay, config) {
           Ok(stock_data) -> Ok(dict.insert(market_data, index, stock_data))
           Error(e) -> Error(e)
         }
