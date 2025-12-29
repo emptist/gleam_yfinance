@@ -11,12 +11,13 @@ import yfinance/types.{
   type Instrument, type Interval, type Ohlcv, type Period, type ProxyConfig,
   type StockInfo, type YFinanceError, type YahooEndpoint, ApiError, Bond,
   ChartEndpoint, Crypto, DefaultKeyStatistics, ETF, FifteenMinutes,
-  FinancialDataEndpoint, FiveDays, FiveMinutes, Forex, Fund, HistoricalEndpoint,
-  Index, NetworkError, NinetyMinutes, OneDay, OneHour, OneMinute, OneMonth,
-  OneWeek, ParseError, PeriodFiveDays, PeriodOneDay, PeriodOneMonth,
-  PeriodThreeMonths, ProfileEndpoint, ProxyError, QuoteEndpoint, RateLimitError,
-  SearchEndpoint, SixtyMinutes, StatisticsEndpoint, Stock, SummaryEndpoint,
-  ThirtyMinutes, ThreeMonths, TimeoutError, TwoMinutes, ValidationError,
+  FinancialDataEndpoint, FiveDays, FiveMinutes, FiveYears, Forex, Fund,
+  HistoricalEndpoint, Index, Max, NetworkError, NinetyMinutes, OneDay, OneHour,
+  OneMinute, OneMonth, OneWeek, OneYear, ParseError, PeriodFiveDays,
+  PeriodOneDay, PeriodOneMonth, PeriodThreeMonths, ProfileEndpoint, ProxyError,
+  QuoteEndpoint, RateLimitError, SearchEndpoint, SixMonths, SixtyMinutes,
+  StatisticsEndpoint, Stock, SummaryEndpoint, TenYears, ThirtyMinutes,
+  ThreeMonths, TimeoutError, TwoMinutes, TwoYears, ValidationError, YearToDate,
 }
 
 /// Convert interval to string for API calls
@@ -45,8 +46,13 @@ pub fn period_to_string(period: Period) -> String {
     PeriodFiveDays -> "5d"
     PeriodOneMonth -> "1mo"
     PeriodThreeMonths -> "3mo"
-    _ -> "1d"
-    // Default fallback
+    SixMonths -> "6mo"
+    OneYear -> "1y"
+    TwoYears -> "2y"
+    FiveYears -> "5y"
+    TenYears -> "10y"
+    YearToDate -> "ytd"
+    Max -> "max"
   }
 }
 
@@ -360,27 +366,22 @@ pub fn chunk_list(list: List(a), size: Int) -> List(List(a)) {
   case size <= 0 {
     True -> []
     False -> {
-      list.chunk(list, fn(_) { 1 })
-      |> list.fold([], fn(acc, chunk) {
-        let chunk_length = list.length(chunk)
-        case chunk_length == size {
-          True -> [chunk, ..acc]
-          False -> {
-            let acc_length = list.length(acc)
-            case acc {
-              [current_chunk, ..rest] -> {
-                let current_chunk_length = list.length(current_chunk)
-                case current_chunk_length < size {
-                  True -> [list.append(current_chunk, chunk), ..rest]
-                  False -> [chunk, ..acc]
-                }
-              }
-              _ -> [chunk, ..acc]
-            }
-          }
-        }
-      })
-      |> list.reverse
+      chunk_list_impl(list, size, [])
+    }
+  }
+}
+
+fn chunk_list_impl(
+  list: List(a),
+  size: Int,
+  acc: List(List(a)),
+) -> List(List(a)) {
+  case list {
+    [] -> list.reverse(acc)
+    _ -> {
+      let chunk = list.take(list, size)
+      let remaining = list.drop(list, size)
+      chunk_list_impl(remaining, size, [chunk, ..acc])
     }
   }
 }

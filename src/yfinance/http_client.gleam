@@ -82,7 +82,7 @@ pub fn parse_summary_response(
   Ok(StockInfo(
     symbol: "AAPL",
     // Extract from JSON
-    short_name: "Apple Inc.",
+    short_name: "AAPL",
     // Extract from JSON
     long_name: "Apple Inc.",
     // Extract from JSON
