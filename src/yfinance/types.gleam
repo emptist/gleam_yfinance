@@ -89,7 +89,7 @@ pub type StockInfo {
 }
 
 /// OHLCV (Open, High, Low, Close, Volume) data point
-pub type Ohlcv {
+pub type OHLCV {
   Ohlcv(
     timestamp: Int,
     open: Float,
@@ -107,7 +107,7 @@ pub type StockData {
     symbol: String,
     interval: Interval,
     period: Period,
-    data: List(Ohlcv),
+    data: List(OHLCV),
     currency: String,
     symbol_info: Result(StockInfo, String),
     is_crypto: Bool,

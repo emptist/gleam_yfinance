@@ -8,7 +8,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/string
 
 import yfinance/types.{
-  type Instrument, type Interval, type Ohlcv, type Period, type ProxyConfig,
+  type Instrument, type Interval, type OHLCV, type Period, type ProxyConfig,
   type StockInfo, type YFinanceError, type YahooEndpoint, ApiError, Bond,
   ChartEndpoint, Crypto, DefaultKeyStatistics, ETF, FifteenMinutes,
   FinancialDataEndpoint, FiveDays, FiveMinutes, FiveYears, Forex, Fund,
@@ -249,7 +249,7 @@ pub fn build_request_params(
 }
 
 /// Calculate Simple Moving Average
-pub fn calculate_sma(data: List(Ohlcv), period: Int) -> List(Float) {
+pub fn calculate_sma(data: List(OHLCV), period: Int) -> List(Float) {
   let data_length = list.length(data)
   case data_length {
     0 -> []
@@ -271,7 +271,7 @@ pub fn calculate_sma(data: List(Ohlcv), period: Int) -> List(Float) {
 }
 
 /// Calculate Exponential Moving Average
-pub fn calculate_ema(data: List(Ohlcv), period: Int) -> List(Float) {
+pub fn calculate_ema(data: List(OHLCV), period: Int) -> List(Float) {
   let data_length = list.length(data)
   case data_length {
     0 -> []
@@ -303,7 +303,7 @@ pub fn calculate_ema(data: List(Ohlcv), period: Int) -> List(Float) {
 }
 
 /// Calculate Relative Strength Index
-pub fn calculate_rsi(data: List(Ohlcv), period: Int) -> List(Float) {
+pub fn calculate_rsi(data: List(OHLCV), period: Int) -> List(Float) {
   let data_length = list.length(data)
   case data_length {
     0 -> []

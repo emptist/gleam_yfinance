@@ -10,7 +10,7 @@ import gleam/string
 
 // Import types and utils
 import yfinance/types.{
-  type HttpRequest, type HttpResponse, type HttpResult, type Ohlcv,
+  type HttpRequest, type HttpResponse, type HttpResult, type OHLCV,
   type ProxyConfig, type StockData, type StockInfo, type YFinanceConfig,
   type YFinanceError, type YFinanceResult, type YahooEndpoint, ChartEndpoint,
   GET, HttpRequest, HttpResponse, NetworkError, OneDay, ParseError, PeriodOneDay,
@@ -230,7 +230,7 @@ pub fn handle_rate_limit(
 }
 
 /// Parse OHLCV data from Yahoo Finance response
-pub fn parse_ohlcv_data(_json_data: json.Json) -> List(Ohlcv) {
+pub fn parse_ohlcv_data(_json_data: json.Json) -> List(OHLCV) {
   // TODO: Implement actual JSON parsing for OHLCV data
   // This would parse the timestamps, opens, highs, lows, closes, volumes
   []

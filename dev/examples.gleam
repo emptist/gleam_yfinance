@@ -11,7 +11,7 @@ import gleam/int
 
 import yfinance
 import yfinance/types.{
-  type Ohlcv, ExponentialMovingAverage, Ohlcv, OneDay, PeriodOneDay,
+  type OHLCV, ExponentialMovingAverage, Ohlcv, OneDay, PeriodOneDay,
   RelativeStrengthIndex, SimpleMovingAverage,
 }
 
@@ -87,7 +87,7 @@ pub fn calculate_sma_example() {
   io.println("=== Example 3: Calculate Simple Moving Average ===")
 
   // Create sample OHLCV data (in real usage, this would come from API)
-  let sample_data: List(Ohlcv) = [
+  let sample_data: List(OHLCV) = [
     Ohlcv(1_704_038_400, 100.0, 105.0, 95.0, 103.0, 102.0, 1_000_000),
     Ohlcv(1_704_124_800, 103.0, 108.0, 102.0, 106.0, 105.0, 1_100_000),
     Ohlcv(1_704_211_200, 106.0, 110.0, 105.0, 108.0, 107.0, 1_200_000),
@@ -118,7 +118,7 @@ pub fn calculate_ema_example() {
   io.println("=== Example 4: Calculate Exponential Moving Average ===")
 
   // Create sample OHLCV data
-  let sample_data: List(Ohlcv) = [
+  let sample_data: List(OHLCV) = [
     Ohlcv(1_704_038_400, 100.0, 105.0, 95.0, 103.0, 102.0, 1_000_000),
     Ohlcv(1_704_124_800, 103.0, 108.0, 102.0, 106.0, 105.0, 1_100_000),
     Ohlcv(1_704_211_200, 106.0, 110.0, 105.0, 108.0, 107.0, 1_200_000),
@@ -151,7 +151,7 @@ pub fn calculate_rsi_example() {
   io.println("=== Example 5: Calculate Relative Strength Index ===")
 
   // Create sample OHLCV data with more points for RSI calculation
-  let sample_data: List(Ohlcv) = [
+  let sample_data: List(OHLCV) = [
     Ohlcv(1_704_038_400, 100.0, 105.0, 95.0, 103.0, 102.0, 1_000_000),
     Ohlcv(1_704_124_800, 103.0, 108.0, 102.0, 106.0, 105.0, 1_100_000),
     Ohlcv(1_704_211_200, 106.0, 110.0, 105.0, 108.0, 107.0, 1_200_000),

@@ -27,7 +27,7 @@ pub type StockInfo =
   types.StockInfo
 
 pub type Ohlcv =
-  types.Ohlcv
+  types.OHLCV
 
 pub type StockData =
   types.StockData
@@ -132,7 +132,7 @@ pub fn get_current_price_batch(
 }
 
 pub fn calculate_indicator(
-  data: List(Ohlcv),
+  data: List(OHLCV),
   indicator: Indicator,
 ) -> List(Float) {
   api.calculate_indicator(data, indicator)

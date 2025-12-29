@@ -15,7 +15,7 @@ import yfinance/http_client.{
   fetch_stock_data, fetch_stock_data_batch, fetch_stock_info,
 }
 import yfinance/types.{
-  type Indicator, type Interval, type Ohlcv, type Period, type ProxyConfig,
+  type Indicator, type Interval, type OHLCV, type Period, type ProxyConfig,
   type StockData, type StockInfo, type YFinanceConfig, type YFinanceError,
   type YFinanceResult, ExponentialMovingAverage, OneDay, OneYear, PeriodOneDay,
   ProxyConfig, RelativeStrengthIndex, SimpleMovingAverage, ValidationError,
@@ -223,7 +223,7 @@ pub fn search_symbols(
 
 /// Calculate technical indicators for stock data
 pub fn calculate_indicator(
-  data: List(Ohlcv),
+  data: List(OHLCV),
   indicator: Indicator,
 ) -> List(Float) {
   case indicator {

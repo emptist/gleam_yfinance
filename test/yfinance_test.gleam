@@ -10,17 +10,10 @@ import gleeunit/should
 // Import yfinance modules
 import yfinance
 import yfinance/types.{
-  ApiError, Bond, ChartEndpoint, Crypto, DefaultKeyStatistics, ETF,
-  ExponentialMovingAverage, FifteenMinutes, FinancialDataEndpoint, FiveDays,
-  FiveMinutes, Forex, Fund, HistoricalEndpoint, Index, NetworkError,
-  NinetyMinutes, Ohlcv, OneDay, OneHour, OneMinute, OneMonth, OneWeek,
-  ParseError, PeriodFiveDays, PeriodOneDay, PeriodOneMonth, PeriodThreeMonths,
-  ProfileEndpoint, ProxyError, QuoteEndpoint, RateLimitError,
-  RelativeStrengthIndex, SearchEndpoint, SimpleMovingAverage, SixMonths,
-  SixtyMinutes, StatisticsEndpoint, Stock, StockInfo, SummaryEndpoint,
-  ThirtyMinutes, ThreeMonths, TimeoutError, TwoMinutes, TwoYears,
-  ValidationError, YearToDate,
+  ExponentialMovingAverage, Ohlcv, OneDay, PeriodOneDay, RelativeStrengthIndex,
+  SimpleMovingAverage,
 }
+
 import yfinance/utils
 
 pub fn main() {
