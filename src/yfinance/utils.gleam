@@ -9,15 +9,15 @@ import gleam/string
 
 import yfinance/types.{
   type Instrument, type Interval, type OHLCV, type Period, type ProxyConfig,
-  type StockInfo, type YFinanceError, type YahooEndpoint, ApiError, Bond,
-  ChartEndpoint, Crypto, DefaultKeyStatistics, ETF, FifteenMinutes,
-  FinancialDataEndpoint, FiveDays, FiveMinutes, FiveYears, Forex, Fund,
-  HistoricalEndpoint, Index, Max, NetworkError, NinetyMinutes, OneDay, OneHour,
-  OneMinute, OneMonth, OneWeek, OneYear, ParseError, PeriodFiveDays,
-  PeriodOneDay, PeriodOneMonth, PeriodThreeMonths, ProfileEndpoint, ProxyError,
-  QuoteEndpoint, RateLimitError, SearchEndpoint, SixMonths, SixtyMinutes,
-  StatisticsEndpoint, Stock, SummaryEndpoint, TenYears, ThirtyMinutes,
-  ThreeMonths, TimeoutError, TwoMinutes, TwoYears, ValidationError, YearToDate,
+  type YFinanceError, type YahooEndpoint, ApiError, Bond, ChartEndpoint, Crypto,
+  DefaultKeyStatistics, ETF, FifteenMinutes, FinancialDataEndpoint, FiveDays,
+  FiveMinutes, FiveYears, Forex, Fund, HistoricalEndpoint, Index, Max,
+  NetworkError, NinetyMinutes, OneDay, OneHour, OneMinute, OneMonth, OneWeek,
+  OneYear, ParseError, PeriodFiveDays, PeriodOneDay, PeriodOneMonth,
+  PeriodThreeMonths, ProfileEndpoint, ProxyError, QuoteEndpoint, RateLimitError,
+  SearchEndpoint, SixMonths, SixtyMinutes, StatisticsEndpoint, Stock,
+  SummaryEndpoint, TenYears, ThirtyMinutes, ThreeMonths, TimeoutError,
+  TwoMinutes, TwoYears, ValidationError, YearToDate,
 }
 
 /// Convert interval to string for API calls
@@ -187,7 +187,7 @@ pub fn create_headers(
     |> dict.insert("Connection", "keep-alive")
 
   case proxy {
-    Some(proxy_config) -> {
+    Some(_proxy_config) -> {
       // Add proxy-specific headers if needed
       headers
       |> dict.insert("Proxy-Connection", "keep-alive")
@@ -412,13 +412,13 @@ fn retry_with_backoff_impl(
     False -> {
       case operation() {
         Ok(result) -> Ok(result)
-        Error(error) -> {
+        Error(_error) -> {
           // Wait before retrying (in real implementation, this would be async)
           let power_result = case float.power(2.0, int.to_float(attempt)) {
             Ok(val) -> val
             Error(_) -> 2.0
           }
-          let backoff_delay = int.to_float(delay_ms) *. power_result
+          let _backoff_delay = int.to_float(delay_ms) *. power_result
           retry_with_backoff_impl(operation, max_retries, delay_ms, attempt + 1)
         }
       }

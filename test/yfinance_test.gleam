@@ -10,10 +10,10 @@ import gleeunit/should
 // Import yfinance modules
 import yfinance
 import yfinance/types.{
-  type OHLCV, type StockInfo, ApiError, Crypto, ExponentialMovingAverage,
-  FiveMinutes, Forex, NetworkError, Ohlcv, OneDay, OneHour, OneMinute, OneMonth,
-  PeriodOneDay, PeriodOneMonth, PeriodThreeMonths, RelativeStrengthIndex,
-  SimpleMovingAverage, Stock, StockInfo, ValidationError, YearToDate,
+  type StockInfo, ApiError, Crypto, ExponentialMovingAverage, FiveMinutes, Forex,
+  NetworkError, Ohlcv, OneDay, OneHour, OneMinute, OneMonth, PeriodOneDay,
+  PeriodOneMonth, PeriodThreeMonths, SimpleMovingAverage, Stock, StockInfo,
+  ValidationError, YearToDate,
 }
 
 import yfinance/utils
@@ -220,7 +220,7 @@ pub fn calculate_ema_test() {
 }
 
 pub fn calculate_rsi_test() {
-  let sample_data = [
+  let _sample_data = [
     Ohlcv(1_704_038_400, 100.0, 105.0, 95.0, 103.0, 102.0, 1_000_000),
     Ohlcv(1_704_124_800, 103.0, 108.0, 102.0, 106.0, 105.0, 1_100_000),
     Ohlcv(1_704_211_200, 106.0, 110.0, 105.0, 108.0, 107.0, 1_200_000),

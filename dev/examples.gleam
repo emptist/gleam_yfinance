@@ -1,6 +1,7 @@
 //// Sample usage examples for Yahoo Finance API client
 //// Demonstrates how to fetch 1d data and calculate indicators
 
+import gleam/bool
 import gleam/io
 import gleam/list
 import gleam/result
@@ -11,15 +12,18 @@ import gleam/int
 
 import yfinance
 import yfinance/types.{
-  type OHLCV, ExponentialMovingAverage, Ohlcv, OneDay, PeriodOneDay,
-  RelativeStrengthIndex, SimpleMovingAverage,
+  type OHLCV, ApiError, ExponentialMovingAverage, NetworkError, Ohlcv, OneDay,
+  ParseError, PeriodOneDay, ProxyError, RateLimitError, RelativeStrengthIndex,
+  SimpleMovingAverage, TimeoutError, ValidationError,
 }
 
 /// Example 1: Fetch 1-day data for a single stock
 pub fn fetch_single_stock_1d() {
   io.println("=== Example 1: Fetch 1-Day Data for AAPL ===")
-
-  let config = yfinance.default_config()
+  // Create proxy configuration
+  let proxy = yfinance.proxy("127.0.0.1", 7890)
+  let config = yfinance.config_with_proxy(proxy)
+  // let config = yfinance.default_config()
   let symbol = "AAPL"
 
   case yfinance.get_stock_data(symbol, PeriodOneDay, OneDay, config) {
@@ -37,23 +41,79 @@ pub fn fetch_single_stock_1d() {
           io.println("  Close: " <> float.to_string(latest.close))
           io.println("  Volume: " <> int.to_string(latest.volume))
         }
-        _ -> io.println("No data available")
+        _ -> {
+          io.println("No data available")
+          io.println("Debug Information:")
+          io.println(
+            "  Symbol Info Result: "
+            <> debug_stock_info_result(stock_data.symbol_info),
+          )
+          io.println("  Exchange Result: " <> debug_result(stock_data.exchange))
+          io.println("  Is Crypto: " <> bool.to_string(stock_data.is_crypto))
+          io.println("  Is Forex: " <> bool.to_string(stock_data.is_forex))
+        }
       }
     }
     Error(e) -> {
       io.println("Error fetching data: " <> yfinance.format_error(e))
+      io.println("Debug Information:")
+      io.println("  Error Type: " <> debug_error_type(e))
     }
   }
 
   io.println("")
 }
 
+fn debug_stock_info_result(result: Result(yfinance.StockInfo, String)) -> String {
+  case result {
+    Ok(info) -> "Success - " <> info.short_name
+    Error(msg) -> "Error - " <> msg
+  }
+}
+
+fn debug_result(result: Result(a, String)) -> String {
+  case result {
+    Ok(_) -> "Success"
+    Error(msg) -> "Error - " <> msg
+  }
+}
+
+fn debug_error_type(error: yfinance.YFinanceError) -> String {
+  case error {
+    NetworkError(msg) -> "NetworkError: " <> msg
+    ApiError(msg, code) -> {
+      let base = "ApiError(" <> int.to_string(code) <> "): " <> msg
+      case code {
+        429 -> {
+          base
+          <> "\n  Suggestion: Yahoo Finance rate limit reached."
+          <> "\n  Wait a few minutes before trying again, or reduce the number of requests."
+        }
+        403 -> {
+          base
+          <> "\n  Suggestion: Access forbidden. Check your proxy configuration."
+          <> "\n  Note: Only HTTP proxies are supported, not SOCKS proxies."
+        }
+        _ -> base
+      }
+    }
+    ParseError(msg) -> "ParseError: " <> msg
+    ValidationError(msg) -> "ValidationError: " <> msg
+    RateLimitError(msg) -> "RateLimitError: " <> msg
+    ProxyError(msg) -> "ProxyError: " <> msg
+    TimeoutError(msg) -> "TimeoutError: " <> msg
+  }
+}
+
 /// Example 2: Fetch 1-day data for multiple stocks
 pub fn fetch_multiple_stocks_1d() {
   io.println("=== Example 2: Fetch 1-Day Data for Multiple Stocks ===")
 
-  let config = yfinance.default_config()
-  let symbols = ["AAPL", "GOOGL", "MSFT", "AMZN", "META"]
+  let proxy = yfinance.proxy("127.0.0.1", 7890)
+  let config = yfinance.config_with_proxy(proxy)
+  // let config = yfinance.default_config()
+  // Note: Fetching fewer symbols to avoid rate limiting
+  let symbols = ["AAPL", "GOOGL"]
 
   case yfinance.get_stock_data_batch(symbols, PeriodOneDay, OneDay, config) {
     Ok(data_dict) -> {
@@ -70,12 +130,21 @@ pub fn fetch_multiple_stocks_1d() {
           [latest, ..] -> {
             io.println(symbol <> ": $" <> float.to_string(latest.close))
           }
-          _ -> io.println(symbol <> ": No data available")
+          _ -> {
+            io.println(symbol <> ": No data available")
+            io.println(
+              "  Debug: Symbol Info = "
+              <> debug_stock_info_result(data.symbol_info),
+            )
+            io.println("  Debug: Exchange = " <> debug_result(data.exchange))
+          }
         }
       })
     }
     Error(e) -> {
       io.println("Error fetching batch data: " <> yfinance.format_error(e))
+      io.println("Debug Information:")
+      io.println("  Error Type: " <> debug_error_type(e))
     }
   }
 
@@ -195,7 +264,9 @@ pub fn calculate_rsi_example() {
 pub fn fetch_and_calculate_indicators() {
   io.println("=== Example 6: Fetch 1-Day Data and Calculate Indicators ===")
 
-  let config = yfinance.default_config()
+  let proxy = yfinance.proxy("127.0.0.1", 7890)
+  let config = yfinance.config_with_proxy(proxy)
+  // let config = yfinance.default_config()
   let symbol = "AAPL"
 
   case yfinance.get_stock_data(symbol, PeriodOneDay, OneDay, config) {
@@ -290,7 +361,9 @@ pub fn fetch_and_calculate_indicators() {
 pub fn get_current_prices() {
   io.println("=== Example 7: Get Current Prices for Multiple Stocks ===")
 
-  let config = yfinance.default_config()
+  let proxy = yfinance.proxy("127.0.0.1", 7890)
+  let config = yfinance.config_with_proxy(proxy)
+  // let config = yfinance.default_config()
   let symbols = ["AAPL", "GOOGL", "MSFT", "AMZN"]
 
   case yfinance.get_current_price_batch(symbols, config) {
@@ -313,7 +386,9 @@ pub fn get_current_prices() {
 pub fn get_stock_information() {
   io.println("=== Example 8: Get Stock Information ===")
 
-  let config = yfinance.default_config()
+  let proxy = yfinance.proxy("127.0.0.1", 7890)
+  let config = yfinance.config_with_proxy(proxy)
+  // let config = yfinance.default_config()
   let symbol = "AAPL"
 
   case yfinance.get_stock_info(symbol, config) {

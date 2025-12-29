@@ -4,10 +4,8 @@
 import gleam/dict.{type Dict}
 import gleam/float
 import gleam/int
-import gleam/io
 import gleam/list
-import gleam/option.{type Option, None, Some}
-import gleam/result
+import gleam/option.{None, Some}
 import gleam/string
 
 // Import types and utils
@@ -16,14 +14,13 @@ import yfinance/http_client.{
 }
 import yfinance/types.{
   type Indicator, type Interval, type OHLCV, type Period, type ProxyConfig,
-  type StockData, type StockInfo, type YFinanceConfig, type YFinanceError,
-  type YFinanceResult, ExponentialMovingAverage, OneDay, OneYear, PeriodOneDay,
-  ProxyConfig, RelativeStrengthIndex, SimpleMovingAverage, ValidationError,
-  YFinanceConfig,
+  type StockData, type StockInfo, type YFinanceConfig, type YFinanceResult,
+  ExponentialMovingAverage, OneDay, OneYear, PeriodOneDay, ProxyConfig,
+  RelativeStrengthIndex, SimpleMovingAverage, ValidationError, YFinanceConfig,
 }
 import yfinance/utils.{
-  calculate_ema, calculate_rsi, calculate_sma, chunk_list, format_error,
-  interval_to_string, period_to_string, validate_interval_period,
+  calculate_ema, calculate_rsi, calculate_sma, chunk_list, interval_to_string,
+  period_to_string, validate_interval_period,
 }
 
 /// Default configuration
@@ -180,9 +177,9 @@ pub fn get_current_price_batch(
 /// Get multiple time series for the same symbol with different intervals
 pub fn get_historical_data(
   symbol: String,
-  start_date: Int,
+  _start_date: Int,
   // Unix timestamp
-  end_date: Int,
+  _end_date: Int,
   // Unix timestamp
   interval: Interval,
   config: YFinanceConfig,
@@ -196,8 +193,8 @@ pub fn get_historical_data(
 
 /// Get dividends for a symbol
 pub fn get_dividends(
-  symbol: String,
-  config: YFinanceConfig,
+  _symbol: String,
+  _config: YFinanceConfig,
 ) -> YFinanceResult(List(#(Int, Float))) {
   // TODO: Implement dividends fetching
   Ok([])
@@ -205,8 +202,8 @@ pub fn get_dividends(
 
 /// Get splits for a symbol
 pub fn get_splits(
-  symbol: String,
-  config: YFinanceConfig,
+  _symbol: String,
+  _config: YFinanceConfig,
 ) -> YFinanceResult(List(#(Int, Float))) {
   // TODO: Implement splits fetching
   Ok([])
@@ -214,8 +211,8 @@ pub fn get_splits(
 
 /// Search for symbols
 pub fn search_symbols(
-  query: String,
-  config: YFinanceConfig,
+  _query: String,
+  _config: YFinanceConfig,
 ) -> YFinanceResult(List(String)) {
   // TODO: Implement symbol search
   Ok([])
@@ -315,8 +312,8 @@ pub fn get_forex_data(
 
 /// Get earnings data
 pub fn get_earnings(
-  symbol: String,
-  config: YFinanceConfig,
+  _symbol: String,
+  _config: YFinanceConfig,
 ) -> YFinanceResult(List(String)) {
   // TODO: Implement earnings data fetching
   Ok([])
@@ -324,8 +321,8 @@ pub fn get_earnings(
 
 /// Get financial statements
 pub fn get_financial_data(
-  symbol: String,
-  config: YFinanceConfig,
+  _symbol: String,
+  _config: YFinanceConfig,
 ) -> YFinanceResult(String) {
   // TODO: Implement financial data fetching
   Ok("Financial data not implemented")

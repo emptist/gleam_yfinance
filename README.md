@@ -49,9 +49,7 @@ Add this dependency to your `gleam.toml`:
 [dependencies]
 yfinance = ">= 1.0.0 and < 2.0.0"
 gleam_stdlib = ">= 0.44.0 and < 2.0.0"
-gleam_http = ">= 3.0.0 and < 4.0.0"
-gleam_json = ">= 0.7.0 and < 1.0.0"
-gleam_result = ">= 0.6.0 and < 1.0.0"
+gleam_stdlib = ">= 0.44.0 and < 2.0.0"
 ```
 
 ## Quick Start
@@ -663,3 +661,44 @@ This project is currently in active development. The HTTP client implementation 
 - Check the [examples](#sample-usage-functions) for usage patterns
 - Review the [test suite](test/yfinance_test.gleam) for more examples
 - Open an issue on GitHub for bugs or feature requests
+
+
+
+**Issue**: HTTP 403 Forbidden errors
+- **Solution**: This may be due to geo-restrictions. You may need to use a proxy. Note that only **HTTP proxies** are supported (SOCKS proxies like Clash/V2Ray are not compatible with Erlang's httpc).
+
+**Issue**: Proxy configuration not working
+- **Solution**: 
+  1. Verify you're using an HTTP proxy (not SOCKS)
+  2. Check that proxy server is running and accessible
+  3. Test with curl: `curl -x http://127.0.0.1:7890 https://query1.finance.yahoo.com/v8/finance/chart?symbol=AAPL`
+  4. If using a SOCKS proxy, consider running an HTTP-to-SOCKS converter or using a different HTTP library
+
+### HTTP Proxy vs SOCKS Proxy
+
+The library uses Erlang's `httpc` module for HTTP requests, which has the following limitations:
+
+- **Supported**: HTTP/HTTPS proxies
+- **Not Supported**: SOCKS proxies (SOCKS4, SOCKS5)
+
+Common proxy tools:
+- **HTTP Proxies**: Squid, Nginx, Apache, Privoxy
+- **SOCKS Proxies**: Clash, V2Ray, Shadowsocks, Tor
+
+If
+
+ need to:
+   1. Run an HTTP-to-SOCKS converter (e.g., Privoxy with `socks5t` forwarding)
+   2. Set up an HTTP proxy server that forwards to your SOCKS proxy
+   3. Consider using a different HTTP library that supports SOCKS proxies
+
+### Rate Limiting (HTTP 429)
+
+If you receive HTTP 429 errors, it means you've hit Yahoo Finance's rate limit. The library includes automatic retry with exponential backoff, but you should:
+
+1. **Wait a few minutes** before trying again
+2. **Reduce the number of requests** - fetch fewer symbols at a time
+3. **Use larger intervals** - use daily data instead of hourly when possible
+4. **Implement caching** - store fetched data locally to avoid repeated requests
+
+The examples in [`dev/examples.gleam`](dev/examples.gleam) have been updated to fetch fewer symbols to help avoid rate limiting.
