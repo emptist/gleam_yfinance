@@ -107,12 +107,21 @@ pub fn float_to_string_safe(
 ) -> String {
   case value {
     Ok(float_val) -> {
-      let precision_factor = case float.power(10.0, int.to_float(precision)) {
-        Ok(val) -> val
-        Error(_) -> 10.0
+      let precision_factor = float.power(10.0, int.to_float(precision))
+      let result =
+        float_val
+        *. {
+          case precision_factor {
+            Ok(val) -> val
+            Error(_) -> 10.0
+          }
+        }
+      let rounded = {
+        case precision_factor {
+          Ok(val) -> float.round(result) /. val
+          Error(_) -> result
+        }
       }
-      let rounded =
-        float.round(float_val *. precision_factor) /. precision_factor
       float.to_string(rounded)
     }
     Error(_) -> "N/A"
@@ -401,9 +410,9 @@ fn retry_with_backoff_impl(
         Ok(result) -> Ok(result)
         Error(error) -> {
           // Wait before retrying (in real implementation, this would be async)
-          let power_result = case int.power(2, attempt) {
-            Ok(val) -> int.to_float(val)
-            Error(_) -> 1.0
+          let power_result = case float.power(2.0, int.to_float(attempt)) {
+            Ok(val) -> val
+            Error(_) -> 2.0
           }
           let backoff_delay = int.to_float(delay_ms) *. power_result
           retry_with_backoff_impl(operation, max_retries, delay_ms, attempt + 1)
