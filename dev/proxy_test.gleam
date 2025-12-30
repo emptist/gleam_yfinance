@@ -305,10 +305,10 @@ pub fn run_all_proxy_tests() {
   io.println("========================================")
   io.println("")
 
-  test_google_no_proxy()
   test_google_with_proxy()
-  test_youtube_no_proxy()
   test_youtube_with_proxy()
+  test_google_no_proxy()
+  test_youtube_no_proxy()
   test_performance_comparison()
 
   io.println("========================================")
