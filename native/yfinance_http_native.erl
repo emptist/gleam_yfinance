@@ -39,7 +39,7 @@ http_get(Url, Timeout, ProxyHost, ProxyPort, ProxyUser, ProxyPass) ->
         
         io:format("[DEBUG NATIVE] Pattern matching on: ~p, ~p, ~p, ~p~n", [ProxyHost, ProxyPort, ProxyUser, ProxyPass]),
         
-        {_UseProxy, FinalOptions} = case {ProxyHost, ProxyPort, ProxyUser, ProxyPass} of
+        FinalOptions = case {ProxyHost, ProxyPort, ProxyUser, ProxyPass} of
             {<<"no_proxy">>, _, _, _} ->
               io:format("[DEBUG NATIVE] No proxy configured (explicit no_proxy)~n"),
               %% Clear proxy environment variables
@@ -47,7 +47,7 @@ http_get(Url, Timeout, ProxyHost, ProxyPort, ProxyUser, ProxyPass) ->
               os:putenv("https_proxy", ""),
               os:putenv("HTTP_PROXY", ""),
               os:putenv("HTTPS_PROXY", ""),
-              {false, [{timeout, 10000}]};
+              [{timeout, Timeout}];
             {Host, Port, User, Pass} when Host =/= <<>>, Host =/= "" ->
                 io:format("[DEBUG NATIVE] Using proxy: ~p:~p~n", [Host, Port]),
                 %% Convert host to char list for httpc
@@ -65,7 +65,7 @@ http_get(Url, Timeout, ProxyHost, ProxyPort, ProxyUser, ProxyPass) ->
                     false -> Pass
                 end,
                 
-                %% Create proxy URL with authentication if provided
+                %% Create proxy URL for environment variables
                 ProxyAuth = case ProxyUserStr of
                   "" -> "";
                   _ -> ProxyUserStr ++ ":" ++ ProxyPassStr ++ "@"
@@ -79,23 +79,8 @@ http_get(Url, Timeout, ProxyHost, ProxyPort, ProxyUser, ProxyPass) ->
                 os:putenv("HTTP_PROXY", ProxyUrl),
                 os:putenv("HTTPS_PROXY", ProxyUrl),
                 
-                %% Create proxy options with authentication
-                ProxyAuthDetails = case ProxyUserStr of
-                  "" -> [];
-                  _ -> [{username, ProxyUserStr}, {password, ProxyPassStr}]
-                end,
-                
-                ProxyOption = {proxy, {{ProxyHostStr, Port}, ProxyAuthDetails}},
-                case httpc:set_options([ProxyOption]) of
-                    ok ->
-                        io:format("[DEBUG NATIVE] Proxy with auth accepted by httpc:set_options~n"),
-                        ok;
-                    {error, _Reason} ->
-                        io:format("[DEBUG NATIVE] httpc:set_options failed (but env vars are set)~n"),
-                        ok
-                end,
-                %% Return proxy option with timeout
-                {true, [{proxy, {{ProxyHostStr, Port}, ProxyAuthDetails}}, {timeout, 10000}]};
+                %% Create proxy options for the request (not using set_options)
+                [{timeout, Timeout}];
             {"no_proxy", _, _, _} ->
               io:format("[DEBUG NATIVE] No proxy configured (explicit no_proxy)~n"),
               %% Clear proxy environment variables
@@ -103,7 +88,7 @@ http_get(Url, Timeout, ProxyHost, ProxyPort, ProxyUser, ProxyPass) ->
               os:putenv("https_proxy", ""),
               os:putenv("HTTP_PROXY", ""),
               os:putenv("HTTPS_PROXY", ""),
-              {false, [{timeout, 10000}]};
+              [{timeout, Timeout}];
             {"", _, _, _} ->
               io:format("[DEBUG NATIVE] No proxy configured (empty host)~n"),
               %% Clear proxy environment variables
@@ -111,7 +96,7 @@ http_get(Url, Timeout, ProxyHost, ProxyPort, ProxyUser, ProxyPass) ->
               os:putenv("https_proxy", ""),
               os:putenv("HTTP_PROXY", ""),
               os:putenv("HTTPS_PROXY", ""),
-              {false, [{timeout, 10000}]};
+              [{timeout, Timeout}];
             _ ->
               io:format("[DEBUG NATIVE] No proxy configured (default case)~n"),
               %% Clear proxy environment variables
@@ -119,7 +104,7 @@ http_get(Url, Timeout, ProxyHost, ProxyPort, ProxyUser, ProxyPass) ->
               os:putenv("https_proxy", ""),
               os:putenv("HTTP_PROXY", ""),
               os:putenv("HTTPS_PROXY", ""),
-              {false, [{timeout, 10000}]}
+              [{timeout, Timeout}]
         end,
         
         io:format("[DEBUG NATIVE] Making request to: ~s~n", [UrlStr]),
