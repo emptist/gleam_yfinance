@@ -487,8 +487,19 @@ src/
     ├── http_client.gleam   # HTTP client implementation (mocked for now)
     └── api.gleam           # Main API functions (get_stock_data, etc.)
 
-examples/
-└── examples.gleam          # Comprehensive sample usage examples
+native/
+└── yfinance_http_native.erl  # Native Erlang HTTP implementation with proxy support
+
+dev/
+├── proxy_test.gleam          # Main proxy test suite (legacy)
+├── proxy_test_no_proxy.gleam       # Test without proxy
+├── proxy_test_with_proxy.gleam      # Test with proxy
+├── proxy_test_article_no_proxy.gleam  # Test article without proxy
+├── proxy_test_article_with_proxy.gleam # Test article with proxy
+├── proxy_test_performance.gleam       # Performance comparison
+├── proxy_test_ports.gleam             # Test different proxy ports
+├── PROXY_TEST_README.md       # Proxy test documentation
+└── examples.gleam              # General usage examples
 
 test/
 └── yfinance_test.gleam     # Comprehensive test suite
@@ -664,6 +675,48 @@ This project is currently in active development. The HTTP client implementation 
 
 
 
+## Testing Proxy Functionality
+
+The project includes comprehensive proxy test modules in the `dev/` directory. These tests validate that proxy configuration works correctly by making HTTP requests to Wikipedia.
+
+### Running Proxy Tests
+
+Each test module can be run independently:
+
+```bash
+# Test without proxy
+gleam run --module proxy_test_no_proxy
+
+# Test with proxy (127.0.0.1:7890)
+gleam run --module proxy_test_with_proxy
+
+# Test Wikipedia article without proxy
+gleam run --module proxy_test_article_no_proxy
+
+# Test Wikipedia article with proxy
+gleam run --module proxy_test_article_with_proxy
+
+# Compare performance with/without proxy
+gleam run --module proxy_test_performance
+
+# Test different proxy ports
+gleam run --module proxy_test_ports
+```
+
+For more information, see [`dev/PROXY_TEST_README.md`](dev/PROXY_TEST_README.md).
+
+### Proxy Configuration
+
+Default proxy settings for tests:
+- Host: `127.0.0.1`
+- Port: `7890`
+
+Ensure your HTTP proxy server is running before executing the tests.
+
+**Important**: Only HTTP/HTTPS proxies are supported. SOCKS proxies (Clash, V2Ray, etc.) are not compatible with Erlang's `httpc` module.
+
+### Troubleshooting
+
 **Issue**: HTTP 403 Forbidden errors
 - **Solution**: This may be due to geo-restrictions. You may need to use a proxy. Note that only **HTTP proxies** are supported (SOCKS proxies like Clash/V2Ray are not compatible with Erlang's httpc).
 
@@ -702,3 +755,81 @@ If you receive HTTP 429 errors, it means you've hit Yahoo Finance's rate limit. 
 4. **Implement caching** - store fetched data locally to avoid repeated requests
 
 The examples in [`dev/examples.gleam`](dev/examples.gleam) have been updated to fetch fewer symbols to help avoid rate limiting.
+
+### HTTP Client Implementation and Alternative Libraries
+
+The yfinance library uses Erlang's native `httpc` module for HTTP requests, providing robust proxy support out of the box. However, if you need alternative HTTP client implementations, there are several Gleam packages available:
+
+#### Current Implementation: Erlang httpc
+The library currently uses Erlang's built-in `httpc` module through native Erlang code in [`native/yfinance_http_native.erl`](native/yfinance_http_native.erl). This provides:
+
+- **Proxy Support**: Full HTTP/HTTPS proxy configuration via environment variables or explicit settings
+- **Authentication**: Support for authenticated proxies with username/password
+- **System Integration**: Automatically uses system proxy settings when configured
+- **Stability**: Mature, production-ready HTTP client included with Erlang/OTP
+
+#### Alternative HTTP Client Libraries
+
+If you prefer to use different HTTP client libraries, these Gleam packages are available:
+
+1. **gleam_hackney** - Hackney HTTP Client Adapter:
+   ```toml
+   [dependencies]
+   gleam_hackney = ">= 1.0.0 and < 2.0.0"
+   ```
+
+   Features:
+   - High-performance HTTP client written in Erlang
+   - Proxy support (HTTP, HTTPS, SOCKS)
+   - Connection pooling and keep-alive
+   - Streaming support
+
+2. **gleam_httpc** - Erlang httpc Wrapper:
+   ```toml
+   [dependencies]
+   gleam_httpc = ">= 1.0.0 and < 2.0.0"
+   ```
+
+   Features:
+   - Wraps Erlang's built-in httpc module (same as current implementation)
+   - Gleam-native interface
+   - Proxy support through system settings
+
+#### Using Alternative Clients
+
+To integrate alternative HTTP clients, you would need to:
+
+1. Add the dependency to your `gleam.toml`
+2. Create a custom HTTP client implementation
+3. Replace the current native Erlang implementation
+
+Example using gleam_hackney:
+```gleam
+import gleam/hackney
+import gleam/result
+
+pub fn custom_http_get(url: String, proxy_config: Option(ProxyConfig)) -> Result(String, String) {
+  let options = case proxy_config {
+    Some(proxy) -> [
+      #("proxy", "http://" <> proxy.host <> ":" <> int.to_string(proxy.port)),
+      #("proxy_auth", {proxy.username, proxy.password})
+    ]
+    None -> []
+  }
+  
+  case hackney.get(url, options) {
+    Ok(response) -> result.map(response.body, fn(body) { body })
+    Error(error) -> Error("HTTP error: " <> error)
+  }
+}
+```
+
+#### Choosing the Right Client
+
+| Client | Proxy Support | Performance | Features |
+|--------|---------------|-------------|----------|
+| **Erlang httpc** (current) | HTTP/HTTPS only | Good | Built-in, mature, stable |
+| **Hackney** | HTTP/HTTPS/SOCKS | Excellent | Advanced features, connection pooling |
+| **HTTPoison** | HTTP/HTTPS | Good | Elixir-style API, easy to use |
+
+Note: The current implementation using Erlang's `httpc` module provides sufficient proxy support for most use cases and avoids additional dependencies.

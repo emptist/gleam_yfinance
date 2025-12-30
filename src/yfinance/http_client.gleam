@@ -24,7 +24,10 @@ import yfinance/utils.{build_request_params, build_yahoo_url, create_headers}
 fn http_get_native(
   url: String,
   timeout: Int,
-  proxy_config: #(String, Int),
+  proxy_host: String,
+  proxy_port: Int,
+  proxy_user: String,
+  proxy_pass: String,
 ) -> Result(#(Int, String), String)
 
 /// Execute HTTP request with retry logic
@@ -78,12 +81,31 @@ fn execute_request_with_retry(
 
       // Build proxy config tuple for native module
       let proxy_config = case config.proxy {
-        Ok(proxy) -> #(proxy.host, proxy.port)
-        Error(_) -> #("no_proxy", 0)
+        Ok(proxy) -> {
+          let username = case proxy.username {
+            Ok(user) -> user
+            Error(_) -> ""
+          }
+          let password = case proxy.password {
+            Ok(pass) -> pass
+            Error(_) -> ""
+          }
+          #(proxy.host, proxy.port, username, password)
+        }
+        Error(_) -> #("no_proxy", 0, "", "")
       }
 
       // Make actual HTTP request using native Erlang
-      case http_get_native(request.url, config.timeout, proxy_config) {
+      case
+        http_get_native(
+          request.url,
+          config.timeout,
+          proxy_config.0,
+          proxy_config.1,
+          proxy_config.2,
+          proxy_config.3,
+        )
+      {
         Ok(#(status_code, body)) -> {
           io.println(
             "[DEBUG]   Response Status: " <> int.to_string(status_code),
