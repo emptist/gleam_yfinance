@@ -3,6 +3,7 @@
 import gleam/dict
 import gleam/float
 import gleam/int
+import gleam/io
 import gleam/list
 import gleeunit
 import gleeunit/should
@@ -407,4 +408,70 @@ pub fn error_handling_test() {
   let network_error = NetworkError("Connection timeout")
   utils.format_error(network_error)
   |> should.equal("Network Error: Connection timeout")
+}
+
+// Test proxy configuration with Google and YouTube
+pub fn proxy_google_test() {
+  io.println("\n=== Test: Proxy with Google ===")
+
+  // Create proxy configuration
+  let proxy = yfinance.proxy("127.0.0.1", 7890)
+  let config = yfinance.config_with_proxy(proxy)
+
+  // Verify proxy configuration
+  case config.proxy {
+    Ok(proxy_config) -> {
+      proxy_config.host
+      |> should.equal("127.0.0.1")
+
+      proxy_config.port
+      |> should.equal(7890)
+
+      io.println(
+        "✓ Proxy configuration verified: "
+        <> proxy_config.host
+        <> ":"
+        <> int.to_string(proxy_config.port),
+      )
+    }
+    Error(_) -> should.fail()
+  }
+
+  io.println("Note: To test actual connectivity, run:")
+  io.println("  gleam run --module dev/proxy_test --target erlang")
+}
+
+pub fn proxy_youtube_test() {
+  io.println("\n=== Test: Proxy with YouTube ===")
+
+  // Create proxy configuration
+  let proxy = yfinance.proxy("127.0.0.1", 7890)
+  let config = yfinance.config_with_proxy(proxy)
+
+  // Verify proxy configuration
+  case config.proxy {
+    Ok(proxy_config) -> {
+      proxy_config.host
+      |> should.equal("127.0.0.1")
+
+      proxy_config.port
+      |> should.equal(7890)
+
+      proxy_config.scheme
+      |> should.equal("http")
+
+      io.println(
+        "✓ Proxy configuration verified: "
+        <> proxy_config.scheme
+        <> "://"
+        <> proxy_config.host
+        <> ":"
+        <> int.to_string(proxy_config.port),
+      )
+    }
+    Error(_) -> should.fail()
+  }
+
+  io.println("Note: To test actual connectivity, run:")
+  io.println("  gleam run --module dev/proxy_test --target erlang")
 }
